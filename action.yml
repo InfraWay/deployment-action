@@ -23,6 +23,12 @@ inputs:
   ref:
     description: "The reference for the deployment"
     required: false
+  owner:
+    description: "The owner"
+    required: false
+  repo:
+    description: "The repo"
+    required: false
   token:
     description: "Github repository token"
     required: true
