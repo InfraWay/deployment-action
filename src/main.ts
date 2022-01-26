@@ -13,7 +13,7 @@ type DeploymentState =
 async function run() {
   try {
     const context = github.context;
-    
+
     const prStringInput = core.getInput("pr", {
       required: false
     });
@@ -21,7 +21,9 @@ async function run() {
 
     const pr_id = core.getInput("pr_id", {required: false}) || 0;
 
-    const logUrl = pr ? `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${pr_id}/checks` : `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha}/checks`;
+    const owner = core.getInput("owner", {required: false}) || context.repo.owner;
+    const repo = core.getInput("repo", {required: false}) || context.repo.repo;
+    const logUrl = pr ? `https://github.com/${owner}/${repo}/pull/${pr_id}/checks` : `https://github.com/${owner}/${repo}/commit/${context.sha}/checks`;
 
     const token = core.getInput("token", { required: true });
     const ref = core.getInput("ref", { required: false }) || context.ref;
@@ -46,8 +48,8 @@ async function run() {
     const client = new github.GitHub(token, { previews: ["flash", "ant-man"] });
 
     const deployment = await client.repos.createDeployment({
-      owner: context.repo.owner,
-      repo: context.repo.repo,
+      owner,
+      repo,
       ref: ref,
       payload,
       required_contexts: [],
@@ -59,6 +61,8 @@ async function run() {
 
     await client.repos.createDeploymentStatus({
       ...context.repo,
+      owner,
+      repo,
       deployment_id: deployment.data.id,
       state: initialStatus,
       log_url: logUrl,

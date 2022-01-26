@@ -3212,7 +3212,9 @@ function run() {
             });
             const pr = prStringInput === "true";
             const pr_id = core.getInput("pr_id", { required: false }) || 0;
-            const logUrl = pr ? `https://github.com/${context.repo.owner}/${context.repo.repo}/pull/${pr_id}/checks` : `https://github.com/${context.repo.owner}/${context.repo.repo}/commit/${context.sha}/checks`;
+            const owner = core.getInput("owner", { required: false }) || context.repo.owner;
+            const repo = core.getInput("repo", { required: false }) || context.repo.repo;
+            const logUrl = pr ? `https://github.com/${owner}/${repo}/pull/${pr_id}/checks` : `https://github.com/${owner}/${repo}/commit/${context.sha}/checks`;
             const token = core.getInput("token", { required: true });
             const ref = core.getInput("ref", { required: false }) || context.ref;
             const url = core.getInput("target_url", { required: false }) || logUrl;
@@ -3232,8 +3234,8 @@ function run() {
             const transient_environment = transientEnvironmentStringInput === "true";
             const client = new github.GitHub(token, { previews: ["flash", "ant-man"] });
             const deployment = yield client.repos.createDeployment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
+                owner,
+                repo,
                 ref: ref,
                 payload,
                 required_contexts: [],
@@ -3242,7 +3244,8 @@ function run() {
                 auto_merge,
                 description
             });
-            yield client.repos.createDeploymentStatus(Object.assign({}, context.repo, { deployment_id: deployment.data.id, state: initialStatus, log_url: logUrl, environment_url: url, description }));
+            yield client.repos.createDeploymentStatus(Object.assign({}, context.repo, { owner,
+                repo, deployment_id: deployment.data.id, state: initialStatus, log_url: logUrl, environment_url: url, description }));
             core.setOutput("deployment_id", deployment.data.id.toString());
         }
         catch (error) {
